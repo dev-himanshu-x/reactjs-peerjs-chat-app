@@ -5,13 +5,13 @@ function MyComponents() {
       <div className="flex items-center p-3 justify-between mr-6">
         <div>
           <img
-            src="public/person.png"
+            src="/person.png"
             className="w-10 h-10 rounded-full object-cover"
           />
         </div>
         <div className="flex items-center gap-4">
           <img
-            src="public/moon.png"
+            src="/moon.png"
             className="w-7 h-7 rounded-full object-cover mr-2"
           />
           <div>
@@ -39,7 +39,7 @@ function MyComponents() {
               </g>
             </svg>
           </div>
-          <img src="public/message.png" className="w-5 h-5 mr-3.5" />
+          <img src="/message.png" className="w-5 h-5 mr-3.5" />
           <svg
             xmlns="http://www.w3.org/2000/svg"
             height="24px"
@@ -54,7 +54,7 @@ function MyComponents() {
       <div className="bg-[#9DE1FE] h-23 flex items-center p-5 relative">
         <div className="flex gap-3">
           <div className="h-11 w-11 rounded-full bg-white flex justify-center items-center">
-            <img src="public/wifi.png" className="h-7 w-7" />
+            <img src="/wifi.png" className="h-7 w-7" />
           </div>
           <div>
             <div className="font-normal flex justify-between">
@@ -101,7 +101,7 @@ function MyComponents() {
         <div className="p-3 flex items-center gap-3 bg-[#EDEDED]">
           <img
             className="w-12 h-12 rounded-full object-cover"
-            src="public/image.png"
+            src="/image.png"
           />
           <div>
             <p className="font-semibold">John Smith</p>
@@ -125,7 +125,7 @@ function MyComponents() {
         <div className="p-3 flex items-center gap-3 bg-white">
           <img
             className="w-12 h-12 rounded-full object-cover"
-            src="public/child.png"
+            src="/child.png"
           />
           <div>
             <p className="font-semibold">Jane Doe</p>
@@ -149,7 +149,7 @@ function MyComponents() {
         <div className="p-3 flex items-center gap-3 bg-white">
           <img
             className="w-12 h-12 rounded-full object-cover"
-            src="public/sitting.png"
+            src="/sitting.png"
           />
           <div>
             <p className="font-semibold">Bob Johnson</p>
@@ -173,7 +173,7 @@ function MyComponents() {
         <div className="p-3 flex items-center gap-3 bg-white">
           <img
             className="w-12 h-12 rounded-full object-cover"
-            src="public/mountain.png"
+            src="/mountain.png"
           />
           <div>
             <p className="font-semibold">Samantha Lee</p>
@@ -197,7 +197,7 @@ function MyComponents() {
         <div className="p-3 flex items-center gap-3 bg-white">
           <img
             className="w-12 h-12 rounded-full object-cover"
-            src="public/forest.png"
+            src="/forest.png"
           />
           <div>
             <p className="font-semibold">William Chen</p>
@@ -223,7 +223,7 @@ function MyComponents() {
         <div className="p-3 flex items-center gap-3 bg-white">
           <img
             className="w-12 h-12 rounded-full object-cover"
-            src="public/flowers.png"
+            src="/flowers.png"
           />
           <div>
             <p className="font-semibold">Emily Kim</p>

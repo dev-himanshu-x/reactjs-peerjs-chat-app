@@ -71,7 +71,7 @@ function App() {
           </button>
           <div className="flex items-center">
             <img
-              src="public/image.png"
+              src="/image.png"
               className="w-10 h-10 rounded-full mr-3 object-cover"
             />
             <div className="h-14 bg-[#EDEDED] flex items-center gap-2 justify-between flex-1">
@@ -91,7 +91,7 @@ function App() {
                 </div>
               </div>
               <button onClick={connectPeer}>
-                <img src="public/send.png" className="h-5 w-5 mb-5" />
+                <img src="/send.png" className="h-5 w-5 mb-5" />
               </button>
             </div>
           </div>
@@ -119,7 +119,7 @@ function App() {
         <div className="flex-1 bg-[#DCD9D0] p-2">
           <div className="flex justify-center mt-2">
             <div className="bg-[#f8f3d1] py-1 px-3 text-sm flex gap-1 items-center rounded-sm">
-              <img src="public/lock.png" className="h-3.5 w-3.5" />
+              <img src="/lock.png" className="h-3.5 w-3.5" />
               Your Peer Id : {peerId}
             </div>
           </div>
@@ -159,7 +159,7 @@ function App() {
             className=" px-4 py-2 outline-none rounded-md flex-1 bg-white text-base"
           />
           <button onClick={sendMessage}>
-            <img src="public/send.png" className="h-5 w-5" />
+            <img src="/send.png" className="h-5 w-5" />
           </button>
         </div>
       </div>
