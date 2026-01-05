@@ -2,13 +2,8 @@ import { useState } from "react";
 function MyComponents() {
   return (
     <div className={`border-r border-gray-300 block lg:hidden fixed bg-[#EDEDED]`}>
-      <div className="flex items-center p-3 justify-between mr-6">
-        <div>
-          <img
-            src="/person.png"
-            className="w-10 h-10 rounded-full object-cover"
-          />
-        </div>
+      <div className="flex items-center p-3 justify-end mr-6">
+
         <div className="flex items-center gap-4">
           <img
             src="/moon.png"

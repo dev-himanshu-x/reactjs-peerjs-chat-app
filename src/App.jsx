@@ -13,7 +13,7 @@ function App() {
   const [time, setTime] = useState(new Date().toLocaleTimeString());
   const [dash, setDash] = useState(false);
   const peerRef = useRef(null);
-  const connRef = useRef(null);
+  const connRef = useRef(null); 
   const newTime = new Date().toLocaleTimeString();
   useEffect(() => {
     const peer = new Peer();
@@ -53,12 +53,12 @@ function App() {
     setDash(!dash);
   }
   return (
-    <div className="h-screen flex bg-[#EDEDED] border-t">
+    <div className="max-h-auto min-h-screen flex bg-[#EDEDED] border-t">
       <MyComponent />
-      {dash && <MyComponents/>}
+      {dash && <MyComponents />}
       <div className="flex-1 flex flex-col">
         <div className="h-16 bg-[#EDEDED] flex items-center px-2 border-b border-gray-200 justify-between ">
-          <button className=" mr-3 lg:hidden z-1" onClick={open}>
+          <button className=" mr-3 mb-2 lg:hidden z-1" onClick={open}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               height="24px"
@@ -69,10 +69,10 @@ function App() {
               <path d="M120-120v-80h720v80H120Zm0-320v-80h720v80H120Zm0-320v-80h720v80H120Z" />
             </svg>
           </button>
-          <div className="flex items-center">
+          <div className="flex items-center justify-start">
             <img
               src="/image.png"
-              className="w-10 h-10 rounded-full mr-3 object-cover"
+              className="w-10 h-10 rounded-full mr-3 object-cover hidden sm:block"
             />
             <div className="h-14 bg-[#EDEDED] flex items-center gap-2 justify-between flex-1">
               <div>
@@ -95,7 +95,7 @@ function App() {
               </button>
             </div>
           </div>
-          <div className="flex gap-2 mr-5">
+          <div className="gap-2 mr-5 hidden sm:flex">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               height="24px"
@@ -141,7 +141,7 @@ function App() {
             </div>
           ))}
         </div>
-        <div className="h-14 mb-2 bg-[#EDEDED] flex items-center px-4 gap-2 justify-between">
+        <div className="h-14 bg-[#EDEDED] flex items-center px-4 gap-2 justify-between bottom-0 sticky">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="rotate-50 scale-x-[-1]"
