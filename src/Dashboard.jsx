@@ -13,37 +13,37 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const MyComponent = () => {
+const MyComponent = (props) => {
   const [name, setName] = useState("");
   const [peer, setPeer] = useState("");
 
   const [open, setOpen] = useState(false);
 
-  const [data, setData] = useState('');
+  const [data, setData] = useState("");
   const [details, setDetails] = useState("");
 
   useEffect(() => {
-    const localData = JSON.parse(localStorage.getItem("data"))||[];
+    const localData = JSON.parse(localStorage.getItem("data")) || [];
     if (localData) {
       setData(localData);
     }
-  },[]);
+  }, []);
 
   useEffect(() => {
     const local = JSON.parse(localStorage.getItem("data")) || [];
     if (details) {
-      const upload = [...local, details];
+      const upload = [details,...local];
       localStorage.setItem("data", JSON.stringify(upload));
     }
   }, [details]);
 
   function submitForm() {
     if (name && peer) {
-      setData((prev) => [...prev, { user: name, id: peer }]);
+      setData((prev) => [{ user: name, id: peer },...prev]);
     }
     setDetails({ user: name, id: peer });
-    setName('')
-    setPeer('')
+    setName("");
+    setPeer("");
     setOpen(!open);
   }
   function change() {
@@ -52,13 +52,15 @@ const MyComponent = () => {
   return (
     <>
       <div
-        className={`w-[30%] border-r border-gray-300 hidden lg:block bg-[#EDEDED]`}
+        className={`${
+          props.state ? "block" : "hidden"
+        } fixed lg:static lg:block w-auto min-h-screen max-h-auto lg:w-[30%] border-r bg-[#EDEDED]`}
       >
-        <div className="flex items-center p-3 justify-between mr-6">
+        <div className="flex items-center p-3 justify-between mr-6 ">
           <div>
             <img
               src="/person.png"
-              className="w-10 h-10 rounded-full object-cover"
+              className="w-10 h-10 rounded-full object-cover hidden lg:block"
             />
           </div>
           <div className="flex items-center gap-4">
@@ -181,8 +183,10 @@ const MyComponent = () => {
             </div>
           </div>
           <DialogFooter>
-            <DialogClose asChild onClick={change}>
-              <Button variant="outline">Cancel</Button>
+            <DialogClose asChild>
+              <Button variant="outline" onClick={change}>
+                Cancel
+              </Button>
             </DialogClose>
             <Button
               onClick={submitForm}
