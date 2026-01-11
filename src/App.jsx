@@ -14,10 +14,12 @@ function App() {
   const peerRef = useRef(null);
   const connRef = useRef(null);
   const newTime = new Date().toLocaleTimeString();
-  const [data,setData]=useState('')
+  const [data,setData]=useState(null)
   useEffect(() => {
     const local = JSON.parse(localStorage.getItem("data")) || []
+    if(local.length>0){
     setData(local[0])
+    }
     const peer = new Peer();
     peer.on("open", (id) => {
       setPeerId(id);
@@ -77,7 +79,7 @@ function App() {
             />
             <div className="h-14 bg-[#EDEDED] flex items-center gap-2 justify-between flex-1">
               <div>
-                <div>{data.user}</div>
+                <div>{data?.user}</div>
                 
                 <input
                   value={remotePeerIdValue}
