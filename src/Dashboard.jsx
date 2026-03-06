@@ -16,11 +16,48 @@ import { Label } from "@/components/ui/label";
 const MyComponent = (props) => {
   const [name, setName] = useState("");
   const [peer, setPeer] = useState("");
-
+  const [image, setImage] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [peerError, setPeerError] = useState("");
   const [open, setOpen] = useState(false);
+  const [editingIndex, setEditingIndex] = useState(null);
 
   const [data, setData] = useState("");
   const [details, setDetails] = useState("");
+
+  // Regex to validate Peer ID (UUID format)
+  const isValidPeerId = (id) => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(id);
+  };
+
+  // Validate name
+  const validateName = (nameValue) => {
+    if (!nameValue.trim()) {
+      setNameError("Name is required");
+      return false;
+    }
+    if (nameValue.trim().length < 2) {
+      setNameError("Name must be at least 2 characters");
+      return false;
+    }
+    setNameError("");
+    return true;
+  };
+
+  // Validate peer ID
+  const validatePeerId = (peerValue) => {
+    if (!peerValue.trim()) {
+      setPeerError("Peer ID is required");
+      return false;
+    }
+    if (!isValidPeerId(peerValue.trim())) {
+      setPeerError("Invalid Peer ID format. Expected UUID format (e.g., xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)");
+      return false;
+    }
+    setPeerError("");
+    return true;
+  };
 
   useEffect(() => {
     const localData = JSON.parse(localStorage.getItem("data")) || [];
@@ -37,24 +74,88 @@ const MyComponent = (props) => {
     }
   }, [details]);
 
-  function submitForm() {
-    if (name && peer) {
-      setData((prev) => [{ user: name, id: peer },...prev]);
+  function submitForm(e) {
+    e.preventDefault();
+
+    const isNameValid = validateName(name);
+    const isPeerValid = validatePeerId(peer);
+
+    if (isNameValid && isPeerValid) {
+      let updatedData;
+      if (editingIndex !== null) {
+        // Update existing contact
+        updatedData = [...data];
+        updatedData[editingIndex] = { user: name, id: peer, image: image };
+        setData(updatedData);
+        localStorage.setItem("data", JSON.stringify(updatedData));
+        setEditingIndex(null);
+      } else {
+        // Add new contact
+        updatedData = [{ user: name, id: peer, image: image }, ...data];
+        setData(updatedData);
+        setDetails({ user: name, id: peer, image: image });
+        localStorage.setItem("data", JSON.stringify(updatedData));
+      }
+      setName("");
+      setPeer("");
+      setImage("");
+      setOpen(false);
+
+      // Dispatch event to notify about contact change with full updated data
+      window.dispatchEvent(new CustomEvent('contactAdded', { detail: { user: name, id: peer, image: image, allData: updatedData } }));
     }
-    setDetails({ user: name, id: peer });
+  }
+
+  function handleEdit(index) {
+    setEditingIndex(index);
+    setName(data[index].user);
+    setPeer(data[index].id);
+    setImage(data[index].image || "");
+    setOpen(true);
+  }
+
+  function handleDelete(index) {
+    const updatedData = data.filter((_, i) => i !== index);
+    setData(updatedData);
+    localStorage.setItem("data", JSON.stringify(updatedData));
+    // Dispatch event to update App.jsx
+    window.dispatchEvent(new CustomEvent('contactAdded', { detail: { allData: updatedData } }));
+  }
+
+  function clearForm() {
     setName("");
     setPeer("");
-    setOpen(!open);
+    setImage("");
+    setNameError("");
+    setPeerError("");
+    setEditingIndex(null);
   }
+
   function change() {
     setOpen(!open);
+  }
+
+  function handleCancel() {
+    clearForm();
+    setOpen(false);
+  }
+
+  function handleImageChange(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   }
   return (
     <>
       <div
         className={`${
           props.state ? "block" : "hidden"
-        } fixed lg:static lg:block w-auto min-h-screen max-h-auto lg:w-[30%] border-r bg-[#EDEDED]`}
+        } fixed lg:static lg:block w-auto min-h-screen max-h-auto lg:w-[30%] border-r bg-[#EDEDED] dark:bg-[#2d2d2d] border-gray-200 dark:border-gray-700`}
       >
         <div className="flex items-center p-3 justify-between mr-6 ">
           <div>
@@ -63,52 +164,23 @@ const MyComponent = (props) => {
               className="w-10 h-10 rounded-full object-cover hidden lg:block"
             />
           </div>
-          <div className="flex items-center gap-4">
-            <img
-              src="/moon.png"
-              className="w-7 h-7 rounded-full object-cover mr-2"
-            />
-            <div>
-              <svg
-                className="mr-3"
-                fill="#878787"
-                width="24px"
-                height="24px"
-                viewBox="0 0 256.00 256.00"
-                id="Flat"
-                xmlns="http://www.w3.org/2000/svg"
-                stroke="#878787"
-                stroke-width="0.00256"
-              >
-                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                <g
-                  id="SVGRepo_tracerCarrier"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke="#CCCCCC"
-                  stroke-width="2.048"
-                ></g>
-                <g id="SVGRepo_iconCarrier">
-                  <path d="M65.77441,54.46033a8.00119,8.00119,0,0,1,0,11.31445,87.95677,87.95677,0,0,0-22.78955,39.4375,7.99995,7.99995,0,1,1-15.45849-4.127,103.97686,103.97686,0,0,1,26.93457-46.625A8.00178,8.00178,0,0,1,65.77441,54.46033Zm-22.77587,96.3164A7.99983,7.99983,0,1,0,27.544,154.91736,103.97631,103.97631,0,0,0,54.45508,201.556a7.99984,7.99984,0,0,0,11.30273-11.32422A87.96258,87.96258,0,0,1,42.99854,150.77673Zm107.7749,62.24219a87.94957,87.94957,0,0,1-45.54981-.01758,8.00007,8.00007,0,1,0-4.14062,15.45508,103.98087,103.98087,0,0,0,53.8457.01367,8.00008,8.00008,0,0,0-4.15527-15.45117Zm72.03418-67.89746a7.99909,7.99909,0,0,0-9.79248,5.666,87.951,87.951,0,0,1-22.78955,39.4375,8.00018,8.00018,0,0,0,11.31347,11.31445,103.97037,103.97037,0,0,0,26.93457-46.625A8.00058,8.00058,0,0,0,222.80762,145.12146ZM213.001,105.224a8.00006,8.00006,0,1,0,15.45507-4.14063A103.9608,103.9608,0,0,0,201.54492,54.4447a7.99984,7.99984,0,0,0-11.30273,11.32422A87.94691,87.94691,0,0,1,213.001,105.224ZM105.22656,42.98084a87.94957,87.94957,0,0,1,45.54981.01757A8.00006,8.00006,0,1,0,154.917,27.54334a104.009,104.009,0,0,0-53.8457-.01368,8.00008,8.00008,0,0,0,4.15527,15.45118Z"></path>{" "}
-                </g>
-              </svg>
-            </div>
-            <img src="/message.png" className="w-5 h-5 mr-3.5" />
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              height="24px"
-              viewBox="0 -960 960 960"
-              width="24px"
-              fill="#999888"
+          <div>
+            <button
+              onClick={props.toggleTheme}
+              className="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
+              title={props.theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
             >
-              <path d="M480-160q-33 0-56.5-23.5T400-240q0-33 23.5-56.5T480-320q33 0 56.5 23.5T560-240q0 33-23.5 56.5T480-160Zm0-240q-33 0-56.5-23.5T400-480q0-33 23.5-56.5T480-560q33 0 56.5 23.5T560-480q0 33-23.5 56.5T480-400Zm0-240q-33 0-56.5-23.5T400-720q0-33 23.5-56.5T480-800q33 0 56.5 23.5T560-720q0 33-23.5 56.5T480-640Z" />
-            </svg>
+              <img
+                src="/moon.png"
+                className="w-6 h-6 object-cover"
+              />
+            </button>
           </div>
         </div>
-        <div className="bg-[#9DE1FE] h-23 flex items-center p-5 relative">
+        <div className="bg-[#9DE1FE] dark:bg-[#3d5a80] h-23 flex items-center p-5 relative">
           <button className="flex gap-3 ">
             <div
-              className="h-11 w-11 rounded-full active:bg-[#E3DAC9] bg-white flex justify-center items-center"
+              className="h-11 w-11 rounded-full active:bg-[#E3DAC9] dark:active:bg-[#4a5a70] bg-white dark:bg-[#4a5a70] flex justify-center items-center"
               onClick={change}
             >
               <svg
@@ -122,10 +194,10 @@ const MyComponent = (props) => {
               </svg>
             </div>
             <div>
-              <div className="font-normal flex justify-between">
+              <div className="font-normal flex justify-between text-black dark:text-white">
                 Add Contact
               </div>
-              <div className="text-[13px] mt-1 text-gray-700">
+              <div className="text-[13px] mt-1 text-gray-700 dark:text-gray-300">
                 You can add Contacts with Peer ID.
               </div>
             </div>
@@ -134,67 +206,156 @@ const MyComponent = (props) => {
         {data &&
           data.map((user, i) => (
             <div key={i}>
-              <div className="p-3 flex items-center gap-3 bg-[#EDEDED] hover:bg-[#e0e0e0]">
-                <img
-                  className="w-12 h-12 rounded-full object-cover"
-                  src="/image.png"
-                />
-                <div>
-                  <p className="font-semibold">{user.user}</p>
-                  <div className="flex gap-1.5 items-center">
-                    <p className="text-[13px] text-[#686767]">
-                      Peer Id : {user.id}
-                    </p>
+              <div className="p-3 flex items-center gap-3 bg-[#EDEDED] dark:bg-[#2d2d2d] hover:bg-[#e0e0e0] dark:hover:bg-[#3d3d3d] justify-between group">
+                <div className="flex items-center gap-3 flex-1">
+                  <img
+                    className="w-12 h-12 rounded-full object-cover"
+                    src={user.image || "/image.png"}
+                  />
+                  <div>
+                    <p className="font-semibold text-black dark:text-white">{user.user}</p>
+                    <div className="flex gap-1.5 items-center">
+                      <p className="text-[13px] text-gray-700 dark:text-gray-400">
+                        Peer Id : {user.id}
+                      </p>
+                    </div>
                   </div>
+                </div>
+                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => handleEdit(i)}
+                    className="p-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
+                    title="Edit"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      height="18px"
+                      viewBox="0 -960 960 960"
+                      width="18px"
+                      fill="currentColor"
+                    >
+                      <path d="M200-200h57l391-391-57-57-391 391v57Zm-40 80q-17 0-28.5-11.5T120-160v-97q0-16 6-30.5t17-25.5l505-504q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q11 12 17 26.5t6 30.5q0 16-6 30.5T817-660L313-156q-11 11-25.5 17t-30.5 6h-97Z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => handleDelete(i)}
+                    className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900 text-red-600 dark:text-red-400"
+                    title="Delete"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      height="18px"
+                      viewBox="0 -960 960 960"
+                      width="18px"
+                      fill="currentColor"
+                    >
+                      <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h120v-40h320v40h120v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360Z" />
+                    </svg>
+                  </button>
                 </div>
               </div>
             </div>
           ))}
       </div>
-      <Dialog open={open}>
-        <DialogContent className="sm:max-w-[425px] bg-[#EDEDED]">
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-[#EDEDED] dark:bg-[#2d2d2d] border-gray-300 dark:border-gray-600" showCloseButton={false}>
           <DialogHeader>
-            <DialogTitle className={`font-medium`}>Add Contact</DialogTitle>
-            <DialogDescription>
-              You can add contact with name and Peer ID.
-            </DialogDescription>
+            <div className="flex justify-between items-start">
+              <div className="flex-1">
+                <DialogTitle className="font-medium text-black dark:text-white">
+                  {editingIndex !== null ? "Edit Contact" : "Add Contact"}
+                </DialogTitle>
+                <DialogDescription className="text-gray-700 dark:text-gray-300">
+                  {editingIndex !== null
+                    ? "Update contact details including name, image, and Peer ID."
+                    : "Enter contact details including name, image, and Peer ID."
+                  }
+                </DialogDescription>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  clearForm();
+                  setOpen(false);
+                }}
+                className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-xl leading-none p-1"
+                title="Close"
+              >
+                ✕
+              </button>
+            </div>
           </DialogHeader>
-          <div className="grid gap-4">
-            <div className="grid gap-3">
-              <Label htmlFor="name-1">Name</Label>
+          <form onSubmit={submitForm} className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name">Name</Label>
               <Input
-                id="name-1"
+                id="name"
                 name="name"
                 type="text"
                 placeholder="eg : Himanshu Jaiswal"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (nameError) validateName(e.target.value);
+                }}
+                className="h-10 text-base"
               />
+              {nameError && <span className="text-red-600 text-xs">{nameError}</span>}
             </div>
-            <div className="grid gap-3">
-              <Label htmlFor="username-1">Peer ID</Label>
+
+            <div className="grid gap-2">
+              <Label htmlFor="image">Profile Image</Label>
               <Input
-                id="username-1"
-                name="username"
+                id="image"
+                name="image"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="h-10"
+              />
+              {image && (
+                <div className="flex items-center gap-2">
+                  <img src={image} alt="preview" className="w-12 h-12 rounded-full object-cover" />
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Image selected</span>
+                </div>
+              )}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="peer-id">Peer ID</Label>
+              <Input
+                id="peer-id"
+                name="peer-id"
+                type="text"
                 placeholder="eg : dfd3f5ac-33c7-4a97-96c1-5a81d4ca0f9f"
                 value={peer}
-                onChange={(e) => setPeer(e.target.value)}
+                onChange={(e) => {
+                  setPeer(e.target.value);
+                  if (peerError) validatePeerId(e.target.value);
+                }}
+                className="h-10 text-base"
               />
+              {peerError && <span className="text-red-600 text-xs">{peerError}</span>}
             </div>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline" onClick={change}>
-                Cancel
+
+            <DialogFooter>
+              <DialogClose asChild>
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                >
+                  Cancel
+                </button>
+              </DialogClose>
+              <Button
+                type="submit"
+                className="bg-[#393939] hover:bg-[#3a3a3a] dark:bg-[#4a5a70] dark:hover:bg-[#5a6a80] active:bg-[#515151] dark:active:bg-[#3a4a60]"
+              >
+                {editingIndex !== null ? "Update" : "Save"}
               </Button>
-            </DialogClose>
-            <Button
-              onClick={submitForm}
-              className="bg-[#393939] hover: bg-[#3a3a3a] active:bg-[#515151]"
-            >
-              Save
-            </Button>
-          </DialogFooter>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </>
