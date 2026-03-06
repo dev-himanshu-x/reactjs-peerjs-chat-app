@@ -8,7 +8,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,8 +21,7 @@ const MyComponent = (props) => {
   const [open, setOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState(null);
 
-  const [data, setData] = useState("");
-  const [details, setDetails] = useState("");
+  const [data, setData] = useState([]);
 
   // Regex to validate Peer ID (UUID format)
   const isValidPeerId = (id) => {
@@ -61,18 +59,12 @@ const MyComponent = (props) => {
 
   useEffect(() => {
     const localData = JSON.parse(localStorage.getItem("data")) || [];
-    if (localData) {
+    if (Array.isArray(localData)) {
       setData(localData);
+    } else {
+      setData([]);
     }
   }, []);
-
-  useEffect(() => {
-    const local = JSON.parse(localStorage.getItem("data")) || [];
-    if (details) {
-      const upload = [details,...local];
-      localStorage.setItem("data", JSON.stringify(upload));
-    }
-  }, [details]);
 
   function submitForm(e) {
     e.preventDefault();
@@ -93,7 +85,6 @@ const MyComponent = (props) => {
         // Add new contact
         updatedData = [{ user: name, id: peer, image: image }, ...data];
         setData(updatedData);
-        setDetails({ user: name, id: peer, image: image });
         localStorage.setItem("data", JSON.stringify(updatedData));
       }
       setName("");
@@ -101,8 +92,10 @@ const MyComponent = (props) => {
       setImage("");
       setOpen(false);
 
-      // Dispatch event to notify about contact change with full updated data
-      window.dispatchEvent(new CustomEvent('contactAdded', { detail: { user: name, id: peer, image: image, allData: updatedData } }));
+      // Notify parent about contact list change
+      if (props.onContactsChange) {
+        props.onContactsChange(updatedData);
+      }
     }
   }
 
@@ -118,8 +111,10 @@ const MyComponent = (props) => {
     const updatedData = data.filter((_, i) => i !== index);
     setData(updatedData);
     localStorage.setItem("data", JSON.stringify(updatedData));
-    // Dispatch event to update App.jsx
-    window.dispatchEvent(new CustomEvent('contactAdded', { detail: { allData: updatedData } }));
+    // Notify parent about contact list change
+    if (props.onContactsChange) {
+      props.onContactsChange(updatedData);
+    }
   }
 
   function clearForm() {
@@ -153,12 +148,36 @@ const MyComponent = (props) => {
   return (
     <>
       <div
-        className={`${
-          props.state ? "block" : "hidden"
-        } fixed lg:static lg:block w-auto min-h-screen max-h-auto lg:w-[30%] border-r bg-[#EDEDED] dark:bg-[#2d2d2d] border-gray-200 dark:border-gray-700`}
+        className={`fixed inset-y-0 left-0 z-20
+        w-4/5 max-w-xs sm:w-80 md:w-96
+        lg:static lg:block lg:w-[40%]
+        min-h-screen max-h-auto
+        border-r bg-[#EDEDED] dark:bg-[#2d2d2d] border-gray-200 dark:border-gray-700
+        overflow-y-auto
+        transform transition-transform duration-300 ease-in-out
+        ${
+          props.state
+            ? "translate-x-0"
+            : "-translate-x-full lg:translate-x-0"
+        }`}
       >
-        <div className="flex items-center p-3 justify-between mr-6 ">
-          <div>
+        <div className="flex items-center p-3 justify-between">
+          <div className="flex items-center gap-2">
+            <button
+              className="lg:hidden p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
+              onClick={props.onToggleSidebar}
+              title="Close sidebar"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                height="22px"
+                viewBox="0 -960 960 960"
+                width="22px"
+                fill="#434343"
+              >
+                <path d="M280-200 240-240 440-440 240-640 280-680 480-480 680-680 720-640 520-440 720-240 680-200 480-400 280-200Z" />
+              </svg>
+            </button>
             <img
               src="/person.png"
               className="w-10 h-10 rounded-full object-cover hidden lg:block"
@@ -167,7 +186,7 @@ const MyComponent = (props) => {
           <div>
             <button
               onClick={props.toggleTheme}
-              className="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
+              className="rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
               title={props.theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
             >
               <img
@@ -203,7 +222,7 @@ const MyComponent = (props) => {
             </div>
           </button>
         </div>
-        {data &&
+        {Array.isArray(data) &&
           data.map((user, i) => (
             <div key={i}>
               <div className="p-3 flex items-center gap-3 bg-[#EDEDED] dark:bg-[#2d2d2d] hover:bg-[#e0e0e0] dark:hover:bg-[#3d3d3d] justify-between group">

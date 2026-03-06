@@ -5,18 +5,16 @@ import MyComponent from "./Dashboard";
 
 function App() {
   const [peerId, setPeerId] = useState("");
-  const [message, setMessage] = useState([]);
+  const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [connection, setConnection] = useState(null);
-  const [time, setTime] = useState(new Date().toLocaleTimeString());
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem("theme") || "light";
   });
   const peerRef = useRef(null);
   const connRef = useRef(null);
-  const newTime = new Date().toLocaleTimeString();
-  const [data,setData]=useState(null)
+  const [data, setData] = useState(null);
 
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
@@ -28,49 +26,67 @@ function App() {
       document.documentElement.classList.remove("dark");
     }
   };
+
+  const connectToPeer = (targetPeerId) => {
+    if (!peerRef.current || !targetPeerId) return;
+
+    setConnection("Connecting...");
+    const conn = peerRef.current.connect(targetPeerId);
+    connRef.current = conn;
+
+    conn.on("open", function () {
+      setConnection("Online");
+      conn.on("data", function (data) {
+        const timestamp = new Date().toLocaleTimeString();
+        setMessages((prev) => [
+          ...prev,
+          { msg: data, time: timestamp },
+        ]);
+      });
+    });
+
+    conn.on("error", function (err) {
+      setConnection("Offline");
+      console.error("Connection error:", err);
+    });
+
+    conn.on("close", function () {
+      setConnection("Offline");
+    });
+  };
+  // Initialize PeerJS and theme
   useEffect(() => {
-    const local = JSON.parse(localStorage.getItem("data")) || []
-    if(local.length>0){
-    setData(local[0])
+    const local = JSON.parse(localStorage.getItem("data")) || [];
+    if (local.length > 0) {
+      setData(local[0]);
     }
+
     const peer = new Peer();
+    peerRef.current = peer;
     peer.on("open", (id) => {
       setPeerId(id);
+
       // Auto-connect to latest peer ID after peer is ready
-      if(local.length>0){
+      if (local.length > 0) {
         const latestPeerId = local[0].id;
         if (latestPeerId && latestPeerId !== id) {
-          setConnection("Connecting...");
-          const conn = peer.connect(latestPeerId);
-          connRef.current = conn;
-
-          conn.on("open", function () {
-            setConnection("Online");
-            conn.on("data", function (data) {
-              setTime(new Date().toLocaleTimeString());
-              setMessages((prev) => [...prev, { msg: data, time: new Date().toLocaleTimeString() }]);
-            });
-          });
-
-          conn.on("error", function (err) {
-            setConnection("Offline");
-            console.error("Connection error:", err);
-          });
-
-          conn.on("close", function () {
-            setConnection("Offline");
-          });
+          connectToPeer(latestPeerId);
         }
       }
     });
+
     peer.on("connection", (conn) => {
       setConnection("Online");
       connRef.current = conn;
       conn.on("data", (data) => {
-        setTime(new Date().toLocaleTimeString());
-        setMessages((prev) => [...prev, { msg: data, time: new Date().toLocaleTimeString() }]);
+        const timestamp = new Date().toLocaleTimeString();
+        setMessages((prev) => [
+          ...prev,
+          { msg: data, time: timestamp },
+        ]);
       });
     });
+
     setConnection("Offline");
     peerRef.current = peer;
 
@@ -84,54 +100,42 @@ function App() {
     return () => peer.destroy();
   }, []);
 
-  // Listen for new contact added event
-  useEffect(() => {
-    const handleContactAdded = (event) => {
-      const { id: newPeerId, allData } = event.detail;
-      if (allData && allData.length > 0) {
-        setData(allData[0]);
-      } else if (allData && allData.length === 0) {
-        setData(null);
-        setConnection("Offline");
-      }
+  // Handle contact list changes from Dashboard
+  const handleContactsChange = (allData) => {
+    if (allData && allData.length > 0) {
+      const firstContact = allData[0];
+      setData(firstContact);
+
+      const newPeerId = firstContact.id;
       if (newPeerId && peerRef.current && newPeerId !== peerId) {
-        setConnection("Connecting...");
-        const conn = peerRef.current.connect(newPeerId);
-        connRef.current = conn;
-
-        conn.on("open", function () {
-          setConnection("Online");
-          conn.on("data", function (data) {
-            setTime(new Date().toLocaleTimeString());
-            setMessages((prev) => [...prev, { msg: data, time: new Date().toLocaleTimeString() }]);
-          });
-        });
-
-        conn.on("error", function (err) {
-          setConnection("Offline");
-          console.error("Connection error:", err);
-        });
-
-        conn.on("close", function () {
-          setConnection("Offline");
-        });
+        connectToPeer(newPeerId);
       }
-    };
+    } else {
+      setData(null);
+      setConnection("Offline");
+    }
+  };
+  const handleToggleSidebar = () => {
+    setSidebarOpen((prev) => !prev);
+  };
 
-    window.addEventListener("contactAdded", handleContactAdded);
-    return () => window.removeEventListener("contactAdded", handleContactAdded);
-  }, [peerId]);
   function sendMessage(e) {
     e.preventDefault();
     if (!message.trim()) return;
     connRef.current.send(message);
-    setTime(newTime);
-    setMessages((prev) => [...prev, { msg: message, time: time, type: "" }]);
+    const timestamp = new Date().toLocaleTimeString();
+    setMessages((prev) => [...prev, { msg: message, time: timestamp, type: "" }]);
     setMessage("");
   }
   return (
     <div className="max-h-auto min-h-screen flex bg-[#EDEDED] dark:bg-[#1e1e1e] border-t">
-      <MyComponent state={sidebarOpen} toggleTheme={toggleTheme} theme={theme} />
+      <MyComponent
+        state={sidebarOpen}
+        toggleTheme={toggleTheme}
+        theme={theme}
+        onContactsChange={handleContactsChange}
+        onToggleSidebar={handleToggleSidebar}
+      />
       <div className="flex-1 flex flex-col">
         <div className="h-16 bg-[#EDEDED] dark:bg-[#2d2d2d] flex items-center px-2 border-b border-gray-200 dark:border-gray-700 justify-between ">
           <div className="flex items-center justify-start">
