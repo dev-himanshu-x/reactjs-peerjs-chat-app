@@ -54,7 +54,6 @@ function App() {
       setConnection("Offline");
     });
   };
-  // Initialize PeerJS and theme
   useEffect(() => {
     const local = JSON.parse(localStorage.getItem("data")) || [];
     if (local.length > 0) {
@@ -66,7 +65,6 @@ function App() {
     peer.on("open", (id) => {
       setPeerId(id);
 
-      // Auto-connect to latest peer ID after peer is ready
       if (local.length > 0) {
         const latestPeerId = local[0].id;
         if (latestPeerId && latestPeerId !== id) {
@@ -90,7 +88,6 @@ function App() {
     setConnection("Offline");
     peerRef.current = peer;
 
-    // Apply saved theme on mount
     if (theme === "dark") {
       document.documentElement.classList.add("dark");
     } else {
@@ -100,7 +97,6 @@ function App() {
     return () => peer.destroy();
   }, []);
 
-  // Handle contact list changes from Dashboard
   const handleContactsChange = (allData) => {
     if (allData && allData.length > 0) {
       const firstContact = allData[0];

@@ -23,13 +23,11 @@ const MyComponent = (props) => {
 
   const [data, setData] = useState([]);
 
-  // Regex to validate Peer ID (UUID format)
   const isValidPeerId = (id) => {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     return uuidRegex.test(id);
   };
 
-  // Validate name
   const validateName = (nameValue) => {
     if (!nameValue.trim()) {
       setNameError("Name is required");
@@ -43,7 +41,6 @@ const MyComponent = (props) => {
     return true;
   };
 
-  // Validate peer ID
   const validatePeerId = (peerValue) => {
     if (!peerValue.trim()) {
       setPeerError("Peer ID is required");
@@ -75,14 +72,12 @@ const MyComponent = (props) => {
     if (isNameValid && isPeerValid) {
       let updatedData;
       if (editingIndex !== null) {
-        // Update existing contact
         updatedData = [...data];
         updatedData[editingIndex] = { user: name, id: peer, image: image };
         setData(updatedData);
         localStorage.setItem("data", JSON.stringify(updatedData));
         setEditingIndex(null);
       } else {
-        // Add new contact
         updatedData = [{ user: name, id: peer, image: image }, ...data];
         setData(updatedData);
         localStorage.setItem("data", JSON.stringify(updatedData));
@@ -92,7 +87,6 @@ const MyComponent = (props) => {
       setImage("");
       setOpen(false);
 
-      // Notify parent about contact list change
       if (props.onContactsChange) {
         props.onContactsChange(updatedData);
       }
@@ -111,7 +105,6 @@ const MyComponent = (props) => {
     const updatedData = data.filter((_, i) => i !== index);
     setData(updatedData);
     localStorage.setItem("data", JSON.stringify(updatedData));
-    // Notify parent about contact list change
     if (props.onContactsChange) {
       props.onContactsChange(updatedData);
     }
